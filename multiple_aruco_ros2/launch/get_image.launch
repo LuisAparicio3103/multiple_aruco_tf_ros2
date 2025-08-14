@@ -1,0 +1,82 @@
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+    return LaunchDescription([
+        Node(
+            package='cv_camera',
+            executable='cv_camera_node',
+            parameters=[
+                {"device_path": "/dev/video2"},
+                {"device_id": 2},
+                {"frame_id": "laptop_camera"},
+                {"rate": 30.0},
+                {"camera_info_url": "file:///home/luis/calibration_camera_cv_camera/calibrationdata/laptop_camera.yaml"}
+			]
+        ),
+        Node(
+            package='rqt_image_view',
+            executable='rqt_image_view'
+        ),
+        Node(
+            package='image_proc',
+            executable='rectify_node',
+            parameters=[
+                {'image_transport': 'compressed'}
+            ],
+            remappings=[
+                ('image','image_raw'),
+                ('image_rect', 'image_rect')
+            ]
+        ),
+        Node(
+            package='multiple_aruco_ros2',
+            executable='multiple_aruco_tf_ros2',
+            parameters=[
+                {"marker_size": 0.10},
+                {"parent_name": "webcam_barata"},
+                {"dictionary_type": "ALL_DICTS"}
+			]
+        ),
+        Node(
+            package='multiple_aruco_ros2',
+            executable='relative_pose',
+            parameters=[
+                {"source_frame": "marker_8"},
+                {"target_frame": "marker_7"}
+			]
+        ),
+        Node(
+             package='tf2_ros',
+             executable='static_transform_publisher',
+             name='primer_punto',
+             arguments = ['--x', '-1', '--y', '-1', '--z', '0', '--yaw', '0', '--pitch', '0', '--roll', '0', '--frame-id', 'marker_8', '--child-frame-id', 'punto_1']
+        ),
+        Node(
+             package='tf2_ros',
+             executable='static_transform_publisher',
+             name='segundo_punto',
+             arguments = ['--x', '-1', '--y', '1', '--z', '0', '--yaw', '0', '--pitch', '0', '--roll', '0', '--frame-id', 'marker_8', '--child-frame-id', 'punto_2']
+        ),
+        Node(
+             package='tf2_ros',
+             executable='static_transform_publisher',
+             name='tercer_punto',
+             arguments = ['--x', '1', '--y', '1', '--z', '0', '--yaw', '0', '--pitch', '0', '--roll', '0', '--frame-id', 'marker_8', '--child-frame-id', 'punto_3']
+        ),
+        Node(
+             package='tf2_ros',
+             executable='static_transform_publisher',
+             name='cuarto_punto',
+             arguments = ['--x', '1', '--y', '-1', '--z', '0', '--yaw', '0', '--pitch', '0', '--roll', '0', '--frame-id', 'marker_8', '--child-frame-id', 'punto_4']
+        ),
+        Node(
+             package='turtlesim',
+             executable='turtlesim_node'
+        )
+        ,
+        Node(
+             package='rviz2',
+             executable='rviz2'
+        )
+    ])
